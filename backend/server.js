@@ -105,6 +105,8 @@ app.post('/api/chat', async (req, res) => {
 
   } catch (error) {
     console.error('Chat processing error:', error);
+    console.error('Error details:', error.message);
+    console.error('Error status:', error.status);
     res.write(`data: ${JSON.stringify({ error: 'Sorry, I\'m having trouble processing your request right now. Please try again later.' })}\n\n`);
     res.end();
   }

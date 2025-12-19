@@ -53,11 +53,42 @@ const Chatbot: React.FC = () => {
         body: JSON.stringify({ message })
       });
 
-      const data = await response.json();
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('No reader');
+
+      const decoder = new TextDecoder();
+      let fullResponse = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n');
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            if (data === '[DONE]') {
+              break;
+            } else {
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.content) {
+                  fullResponse += parsed.content;
+                }
+                if (parsed.error) {
+                  throw new Error(parsed.error);
+                }
+              } catch (e) {
+                // ignore parse errors
+              }
+            }
+          }
+        }
+      }
 
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: data.response || 'Sorry, I couldn\'t process your request right now.',
+        text: fullResponse || 'Sorry, I couldn\'t process your request right now.',
         sender: 'bot',
         timestamp: new Date()
       };
@@ -182,6 +213,7 @@ const Chatbot: React.FC = () => {
                   type="submit"
                   disabled={isTyping || !inputMessage.trim()}
                   className="w-10 h-10 bg-primary-indigo text-white rounded-full hover:bg-primary-indigo/90 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="Send message"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
