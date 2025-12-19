@@ -23,6 +23,7 @@ console.log('API Key starts with:', process.env.OPENAI_API_KEY?.substring(0, 10)
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+  baseURL: 'https://openrouter.ai/api/v1',
 });
 
 console.log('OpenAI client initialized successfully');
@@ -74,7 +75,7 @@ app.post('/api/chat', async (req, res) => {
 
     // Use OpenAI for streaming AI responses
     const stream = await openai.chat.completions.create({
-      model: 'gpt-4o-mini', // or gpt-4 if available
+      model: 'openai/gpt-4o-mini', // OpenRouter model identifier
       messages: [
         {
           role: 'system',
