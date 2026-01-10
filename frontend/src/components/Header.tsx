@@ -1,9 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { auth } from '../firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const navItems = [
     { name: 'Home', href: '#home' },
@@ -52,9 +62,19 @@ const Header: React.FC = () => {
             animate={{ opacity: 1, x: 0 }}
             className="hidden md:block"
           >
-            <button className="btn-primary">
-              Start My Journey
-            </button>
+            {user ? (
+              <Link to="/test">
+                <button className="btn-primary">
+                  Take Career Test
+                </button>
+              </Link>
+            ) : (
+              <Link to="/signup">
+                <button className="btn-primary">
+                  Start My Journey
+                </button>
+              </Link>
+            )}
           </motion.div>
 
           {/* Mobile Menu Button */}
@@ -89,9 +109,21 @@ const Header: React.FC = () => {
                   {item.name}
                 </a>
               ))}
-              <button className="btn-primary w-full">
-                Start My Journey
-              </button>
+              <Link to="/signup">
+                {user ? (
+                  <Link to="/test">
+                    <button className="btn-primary w-full">
+                      Take Career Test
+                    </button>
+                  </Link>
+                ) : (
+                  <Link to="/signup">
+                    <button className="btn-primary w-full">
+                      Start My Journey
+                    </button>
+                  </Link>
+                )}
+              </Link>
             </div>
           </motion.div>
         )}
